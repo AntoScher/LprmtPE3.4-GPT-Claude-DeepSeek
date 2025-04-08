@@ -24,7 +24,6 @@ with open("prompt-doctor.txt", "r", encoding="utf-8") as f:
 
 # Google Calendar API
 SERVICE_ACCOUNT_FILE = 'service-account.json'   # Путь к файлу с сервисным аккаунтом
-#SERVICE_ACCOUNT_FILE=os.getenv(SERVICE_ACCOUNT_JSON)
 SCOPES = ['https://www.googleapis.com/auth/calendar']
 calendar_id = os.getenv("GOOGLE_CALENDAR_ID")  # ID календаря администратора
 
