@@ -1,157 +1,54 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Flask Chat</title>
+    <title>Система записи к врачу - Doctor AI</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
-    <div class="chat-container">
-        <!-- Блок управления -->
-        <div class="controls">
-            <button class="receipt-btn">Сгенерировать рецепт</button>
-            <button class="appoint-btn">Назначить визит</button>
-        </div>
-
-        <!-- Шапка чата -->
-        <div class="chat-header">
-            <h1>Flask ChatBot</h1>
-            <p>Powered by DeepSeek AI</p>
-        </div>
-
-        <!-- Основной чат -->
-        <div id="chat-messages" class="chat-messages"></div>
-
-        <!-- Контейнер отчетов -->
-        <div id="receipt-container" class="receipt-container"></div>
-
-        <!-- Форма ввода -->
-        <form id="chat-form" class="chat-input">
-            <input type="text"
-                   id="user-message"
-                   placeholder="Введите ваше сообщение..."
-                   autocomplete="off">
+    <div class="container">
+        <h1>Система записи к врачу</h1>
+        <div id="chat-box"></div>
+        <form id="chat-form">
+            <input type="text" id="message-input" placeholder="Введите ваше сообщение..." autocomplete="off" required>
             <button type="submit">Отправить</button>
         </form>
     </div>
-
     <script>
-        // Элементы интерфейса
-        const chatForm = document.getElementById('chat-form');
-        const chatMessages = document.getElementById('chat-messages');
-        const userInput = document.getElementById('user-message');
-        const receiptContainer = document.getElementById('receipt-container');
+        let session_id = null;
 
-        // Обработчик отправки сообщения
-        chatForm.addEventListener('submit', async (e) => {
+        document.getElementById('chat-form').addEventListener('submit', async function(e) {
             e.preventDefault();
-
-            const message = userInput.value.trim();
-            if (!message) return;
-
+            const input = document.getElementById('message-input');
+            const message = input.value;
+            input.value = '';
             appendMessage('user', message);
-            userInput.value = '';
 
-            try {
-                const response = await fetch('/chat', {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ message: message })
-                });
-
-                const data = await response.json();
-                console.log('Ответ сервера:', data);
-
-                if (data.reply) {
-                    appendMessage('bot', data.reply);
-                } else {
-                    appendMessage('bot', 'Ошибка: ' + (data.error || 'Неизвестная ошибка'));
-                }
-            } catch (error) {
-                console.error('Ошибка запроса:', error);
-                appendMessage('bot', 'Ошибка соединения с сервером');
-            }
-        });
-
-        // Функции для генерации рецептов
-        async function generateReceipt() {
-            showLoader();
-            try {
-                const response = await fetch('/generate_receipt');
-                const data = await response.json();
-                displayReceipt('Отчет', data);
-            } catch (error) {
-                displayError('Ошибка генерации отчета');
-            }
-            hideLoader();
-        }
-
-        // Функции для назначения визита
-        async function doAppointment() {
-            showLoader();
-            try {
-                const response = await fetch('/appointment');
-                const data = await response.json();
-                displayAppointment('Визит', data);
-            } catch (error) {
-                displayError('Ошибка назначения визита');
-            }
-            hideLoader();
-        }
-
-        // Вспомогательные функции
-        function appendMessage(sender, text) {
-            const messageDiv = document.createElement('div');
-            messageDiv.className = `message ${sender}-message`;
-
-            messageDiv.innerHTML = `
-                <div class="message-content">${text.replace(/\n/g, '<br>')}</div>
-                <div class="message-time">${new Date().toLocaleTimeString()}</div>
-            `;
-
-            chatMessages.appendChild(messageDiv);
-            chatMessages.scrollTop = chatMessages.scrollHeight;
-        }
-
-        function displayReceipt(title, data) {
-            let content = '';
-            if (data.error) {
-                content = `<div class="error">${data.error}</div>`;
-            } else if (data.reply) {
-                content = `
-                    <div class="receipt-title">${title}</div>
-                    <div class="receipt-content">${data.reply}</div>
-                `;
-            }
-            receiptContainer.innerHTML = content;
-        }
-
-        function showLoader() {
-            document.body.classList.add('loading');
-        }
-
-        function hideLoader() {
-            document.body.classList.remove('loading');
-        }
-
-        function displayError(text) {
-            receiptContainer.innerHTML = `<div class="error">⚠️ ${text}</div>`;
-        }
-
-        // Инициализация кнопок
-        document.addEventListener('DOMContentLoaded', () => {
-            document.querySelector('.receipt-btn').addEventListener('click', generateReceipt);
-            document.querySelector('.appoint-btn').addEventListener('click', doAppointment);
-
-            // Обработчик Enter для поля ввода
-            userInput.addEventListener('keypress', (e) => {
-                if (e.key === 'Enter' && !e.shiftKey) {
-                    e.preventDefault();
-                    chatForm.dispatchEvent(new Event('submit'));
-                }
+            const response = await fetch('/chat', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    message: message,
+                    session_id: session_id
+                })
             });
+            const data = await response.json();
+            if (!session_id) {
+                session_id = data.session_id;
+            }
+            appendMessage('assistant', data.response);
         });
+
+        function appendMessage(role, text) {
+            const chatBox = document.getElementById('chat-box');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'message ' + role;
+            messageDiv.textContent = text;
+            chatBox.appendChild(messageDiv);
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
     </script>
 </body>
 </html>

@@ -19,7 +19,7 @@ openai.api_key = os.getenv("DEEPSEEK_API_KEY")
 
 # Настройки Google Календаря
 SCOPES = ["https://www.googleapis.com/auth/calendar"]
-SERVICE_ACCOUNT_FILE = os.getenv("SERVICE_ACCOUNT_JSON")
+SERVICE_ACCOUNT_FILE = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
 CALENDAR_ID = os.getenv("GOOGLE_CALENDAR_ID")
 
 # Авторизация в Google Calendar
